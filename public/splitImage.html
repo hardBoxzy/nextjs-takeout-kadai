@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAMURAI Kitchen - 画像20分割ツール（対策版）</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f4f6f9;
+      color: #333;
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 { font-size: 24px; margin-bottom: 10px; color: #2c3e50; }
+    p { color: #7f8c8d; font-size: 14px; margin-bottom: 25px; }
+    .file-input-wrapper { margin-bottom: 20px; }
+    input[type="file"] { display: none; }
+    .custom-file-upload {
+      border: 2px dashed #3498db;
+      display: inline-block;
+      padding: 15px 30px;
+      cursor: pointer;
+      border-radius: 8px;
+      color: #3498db;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      background: #fdfeff;
+    }
+    .custom-file-upload:hover { background: #3498db; color: #fff; }
+    .btn {
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 10px;
+    }
+    .btn:hover { background-color: #27ae60; }
+    .btn:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+    #preview {
+      margin-top: 25px;
+      max-width: 100%;
+      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: none;
+    }
+    #status { margin-top: 15px; font-weight: bold; color: #e67e22; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>SAMURAI Kitchen 画像分割ツール（対策版）</h1>
+  <p>時間差を設けてダウンロード制限を回避し、縦4 × 横5の20枚にスライスします。</p>
+  
+  <div class="file-input-wrapper">
+    <label class="custom-file-upload">
+      <input type="file" id="imageInput" accept="image/*">
+      📁 画像ファイルを選択する
+    </label>
+  </div>
+  
+  <button id="splitBtn" class="btn" disabled>画像を20分割してダウンロード</button>
+  
+  <div id="status"></div>
+  <img id="preview" alt="プレビュー">
+</div>
+
+<script>
+  const imageInput = document.getElementById('imageInput');
+  const splitBtn = document.getElementById('splitBtn');
+  const preview = document.getElementById('preview');
+  const status = document.getElementById('status');
+  
+  let loadedImage = null;
+
+  // 画像選択処理
+  imageInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      loadedImage = new Image();
+      loadedImage.onload = function() {
+        preview.src = event.target.result;
+        preview.style.display = 'inline-block';
+        splitBtn.disabled = false;
+        status.textContent = '画像の読み込みが完了しました。';
+      };
+      loadedImage.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ミリ秒単位で処理をストップさせるタイマー関数
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  // 分割ボタン処理（非同期 async に変更）
+  splitBtn.addEventListener('click', async function() {
+    if (!loadedImage) return;
+
+    splitBtn.disabled = true; // 連打防止
+    const ROWS = 4;
+    const COLS = 5;
+    
+    const tileWidth = loadedImage.width / COLS;
+    const tileHeight = loadedImage.height / ROWS;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = tileWidth;
+    canvas.height = tileHeight;
+
+    let count = 1;
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        ctx.clearRect(0, 0, tileWidth, tileHeight);
+
+        ctx.drawImage(
+          loadedImage,
+          c * tileWidth,
+          r * tileHeight,
+          tileWidth,
+          tileHeight,
+          0,
+          0,
+          tileWidth,
+          tileHeight
+        );
+
+        const fileNumber = String(count).padStart(2, '0');
+        const fileName = `product${fileNumber}.jpg`;
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+
+        status.textContent = `保存中: ${fileName} (${count} / 20 枚目)`;
+
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        count++;
+        
+        // 🌟 ブラウザのブロックを回避するために0.15秒の待ち時間を挟む
+        await sleep(150);
+      }
+    }
+
+    status.textContent = '🎉 product01.jpg 〜 product20.jpg の保存がすべて完了しました！';
+    splitBtn.disabled = false;
+  });
+</script>
+
+</body>
+</html>

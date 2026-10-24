@@ -24,3 +24,35 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* ECサイト全体に適用する共通スタイル */
+@layer base {
+  /* 見出し */
+  h1 {
+    @apply text-3xl font-bold mb-6;
+  }
+  h2 {
+    @apply text-2xl font-bold mb-4 mt-8;
+  }
+  h3 {
+    @apply text-xl font-semibold mb-3 mt-6;
+  }
+  h4 {
+    @apply text-lg font-semibold mb-2 mt-4;
+  }
+
+  /* 段落 */
+  p {
+    @apply mb-4 leading-relaxed;
+  }
+
+  /* リスト */
+  ul {
+    @apply list-disc pl-5 mb-4;
+  }
+  ol {
+    @apply list-decimal pl-5 mb-4;
+  }
+  li {
+    @apply mb-2;
+  }
+}
