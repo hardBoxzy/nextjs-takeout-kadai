@@ -1,17 +1,18 @@
 'use client'; // クライアント（ブラウザ）側で動作
 
-import { useState } from 'react';
+import { useState ,useEffect} from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCart, CartItem } from '@/hooks/useCart';
 import CartItemCard from '@/components/CartItemCard';
 import DatePickerForm from '@/components/DatePickerForm';
-
 // 配送費用
 const SHIPPING_COST = 500; // 500円固定とする
 
 // 注文確認ページ
 export default function OrderConfirmPage() {
+    // 1. クライアント側でマウントされたかどうかの管理フラグ
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const { cartItems, totalPrice } = useCart(); // カート情報と制御関数を取得
   const finalPrice = totalPrice + SHIPPING_COST; // 送料込みの最終的な合計金額
@@ -21,7 +22,7 @@ export default function OrderConfirmPage() {
   const [notes, setNotes] = useState(''); // 備考
   const [isAgreed, setIsAgreed] = useState(false); // 同意のチェック有無
   const [errorMessage, setErrorMessage] = useState(''); // エラーメッセージ
-
+  useEffect(() => { setIsMounted(true); }, []);
     // 選択された日付を保持するState
   const [pickupAt, setPickupAt] = useState<string>("");
   const handleDateChange = (dateStr: string) => {
@@ -62,7 +63,17 @@ export default function OrderConfirmPage() {
       router.push('/cart'); // カートページへ遷移
     }
   };
-
+  // 2. マウントされる前（サーバー側でのSSR時）は、ハイドレーションエラーを防ぐために
+  // プレースホルダー（ローディング画面など）か、空の共通UIを返す
+  if (!isMounted) {
+    return (
+      <main className="container mx-auto p-4">
+        <div className="text-center py-16">
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </main>
+    );
+  }
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-center mb-6">ご注文内容の確認</h1>

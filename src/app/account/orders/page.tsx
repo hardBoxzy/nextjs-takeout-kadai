@@ -9,7 +9,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(true);
-
+//ビルド時のプリレンダリング検証をスキップさせます
   // 初期表示時に注文データを取得
   useEffect(() => {
     const getOrders = async () => {

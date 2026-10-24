@@ -15,7 +15,8 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
+// プリレンダリングの強制を解除する
+export const instant = false;
 export const metadata: Metadata = {
   title: "SAMURAI Kitchen Order",
   description: "最新のトレンドとテクノロジーを取り入れた料理をお届けします。",

@@ -2,6 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { useCart } from '@/hooks/useCart';
 // 商品カードコンポーネントに渡すデータ（props）の型定義
 export interface ProductCardProps {
@@ -34,6 +35,11 @@ export default function ProductCard({
     // カート管理用の関数を取得
   const { addItem, isInCart } = useCart();
   const inCart = isInCart(id); // カートに追加済みか
+  // 💡 コンポーネントがブラウザにマウントされたかを管理するステートを追加
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // カートボタン押下時のイベントハンドラ
   const handleCart = () => {
@@ -53,11 +59,9 @@ export default function ProductCard({
     `}>
       <Link href={`/products/${id}`}>
         <Image
-          src={finalImageUrl}
-          alt={title || '商品画像'}
-          width={imageSize}
-          height={imageSize}
-          className="w-full object-contain aspect-square"          
+          src={finalImageUrl} alt={title || '商品画像'} width={imageSize} height={imageSize} loading="eager"
+          className="w-full object-contain aspect-square"    
+                
         />
       </Link>
       <div className="flex flex-col">
@@ -69,13 +73,16 @@ export default function ProductCard({
           <p className="text-lg font-bold">¥{price.toLocaleString()}</p>
           {showCartButton && (
             <button
-              onClick={!inCart ? handleCart : undefined}
+          // 💡 マウントされるまでは、強制的にサーバー側と同じ設定（未追加状態）にする
+          onClick={isMounted && !inCart ? handleCart : undefined}
               disabled={inCart}
-              className={`border py-2 px-4 rounded-sm
-                ${inCart ? 'bg-indigo-500 text-white' : 'border-indigo-500 text-indigo-500 hover:bg-indigo-400 hover:text-white'}
-              `}
+          className={
+            isMounted && inCart
+              ? "border py-2 px-4 rounded-sm bg-indigo-500 text-white" // 追加済みスタイル
+              : "border py-2 px-4 rounded-sm border-indigo-500 text-indigo-500" // カートへスタイル
+          }
             >
-              {inCart ? '追加済み' : 'カートへ'}
+          {isMounted && inCart ? "追加済み" : "カートへ"}
             </button>
           )}
         </div>

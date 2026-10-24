@@ -14,7 +14,8 @@ interface ProductDetailPageProps {
     id: string; // URLから取得する商品ID
  }>
 }
-
+//ビルド時のプリレンダリング検証をスキップさせます
+export const instant = false;
 // 商品データを取得
 async function getProduct(id: string): Promise<Product | null> {
   try {

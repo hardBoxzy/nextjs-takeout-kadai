@@ -1,4 +1,4 @@
-"use client";
+'use client'; // クライアント（ブラウザ）側で動作
 
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
@@ -15,12 +15,14 @@ interface DatePickerFormProps {
 }
 export default function DatePickerForm({ onDateChange }: DatePickerFormProps) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  // 1. 本体とロケール、それぞれの読込状態を管理
+  const [isCoreLoaded, setIsCoreLoaded] = useState(false);
+  const [isLocaleLoaded, setIsLocaleLoaded] = useState(false);
   const fpInstance = useRef<any>(null);
 
   useEffect(() => {
     // スクリプト読み込み完了かつ要素が存在すれば初期化
-    if (isScriptLoaded && inputRef.current && window.flatpickr) {
+    if (isCoreLoaded && isLocaleLoaded && inputRef.current && window.flatpickr) {
       fpInstance.current = window.flatpickr(inputRef.current, {
         inline: true,
         locale: "ja", // 日本語化
@@ -39,7 +41,7 @@ export default function DatePickerForm({ onDateChange }: DatePickerFormProps) {
         fpInstance.current.destroy();
       }
     };
-  }, [isScriptLoaded]);
+  }, [isCoreLoaded, isLocaleLoaded, onDateChange]);
 
   return (
     <div style={{ padding: "20px" }}>
@@ -59,18 +61,18 @@ export default function DatePickerForm({ onDateChange }: DatePickerFormProps) {
         />
       </form>
 
-      {/* 2. flatpickr本体と日本語用ロケールファイルをCDNから読み込む */}
+      {/* 3. flatpickr本体の読み込み */}
       <Script
         src="https://cdn.jsdelivr.net/npm/flatpickr"
         strategy="afterInteractive"
-        onLoad={() => {
-          // 本体が読み終わったら日本語ファイルを動的に追加するか、状態を更新
-          setIsScriptLoaded(true);
-        }}
+        onLoad={() => setIsCoreLoaded(true)}
       />
+
+      {/* 4. 日本語ロケールの読み込み (本体がロードされてから読み込む、または完了タイミングをキャッチ) */}
       <Script
         src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ja.js"
         strategy="afterInteractive"
+        onLoad={() => setIsLocaleLoaded(true)}
       />
     </div>
   );

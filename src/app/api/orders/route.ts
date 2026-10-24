@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { executeQuery } from '@/lib/db';
 import { getAuthUser, type AuthUser } from '@/lib/auth';
-
+// 💡 unstable_connection を next/server からインポート
+import {  connection } from 'next/server'; 
 // 最終的なレスポンス（商品明細を配列化した注文データ）の型定義
 export interface OrderData {
   id: number;
@@ -33,6 +34,9 @@ interface OrderJoinRecord {
 
 // 注文データを取得
 export async function GET() {
+    // 💡 APIが呼ばれたら真っ先に connection() を await する
+  // これにより、Next.jsは「このAPIはビルド時に静的化してはいけない」と正しく判断します
+  await connection();
   try {
     const user: AuthUser | null = await getAuthUser();
     if (!user) {
