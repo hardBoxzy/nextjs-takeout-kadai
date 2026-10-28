@@ -9,6 +9,9 @@ export type PaymentStatus = typeof paymentStatus[number];
 export interface OrderData {
   id: number;
   totalPrice: number;
+  userName: string;
+  phoneNumber: string;
+  notes: string;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   createdAt: string;

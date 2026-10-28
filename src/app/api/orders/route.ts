@@ -20,6 +20,9 @@ export async function GET() {
     const ordersData = await executeQuery<OrderJoinRecord>(`
       SELECT
         o.id AS id,
+        o.user_name AS userName,
+        o.phone_number AS phoneNumber,
+        o.notes AS notes,
         o.total_price AS totalPrice,
         o.status AS status,
         o.payment_status AS paymentStatus,
@@ -41,6 +44,9 @@ export async function GET() {
         // 新しいIDをordersMapに登録
         ordersMap.set(row.id, {
           id: row.id,
+          userName: row.userName,
+          phoneNumber: row.phoneNumber,
+          notes: row.notes,
           totalPrice: row.totalPrice,
           status: row.status,
           paymentStatus: row.paymentStatus,

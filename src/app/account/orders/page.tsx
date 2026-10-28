@@ -131,12 +131,15 @@ export default function OrdersPage() {
             <div className="flex justify-between mb-4">
               <div>
                 <p className="text-lg font-semibold">注文ID：{order.id}</p>
-                <p>注文日時：{order.createdAt ? new Date(order.createdAt).toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</p>
-             </div>
+                <p>お客様：{order.userName }</p>   
+                <p>電話番号：{order.phoneNumber }</p>    
+                <p>備考：{order.notes }</p>  
+              </div>
               <div>
                 <p className="text-lg font-semibold min-h-[28px]">  </p>
                 <p>受取日時：{order.createdAt ? new Date(order.pickupAt).toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</p>       
-              </div>
+                <p>注文日時：{order.createdAt ? new Date(order.createdAt).toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</p>
+             </div>
               <div className="text-right font-semibold">
                 <div>
                   <p className="text-blue-600 text-xl">合計金額：¥{order.totalPrice.toLocaleString()}</p>
