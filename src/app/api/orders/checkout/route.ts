@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     const orderId = await createOrder(userId, correctPriceItems, userName, totalPrice,phoneNumber,notes,pickupAt);
     // await updateOrder(userId, Number(orderId), '処理中', '決済成功');
 
-    const successUrl = `${request.nextUrl.origin}/?session_id={CHECKOUT_SESSION_ID}`;
+    const successUrl = `${process.env.BASE_URL}/?session_id={CHECKOUT_SESSION_ID}`;
     // フロントエンドにStripeのURLを返す
     return NextResponse.json({ url: successUrl }, { status: 200 });
   } catch (err) {
