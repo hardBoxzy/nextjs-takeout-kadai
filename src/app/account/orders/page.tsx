@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { OrderData } from '@/app/api/orders/route';
+import { OrderData, orderStatus, OrderStatus, paymentStatus, PaymentStatus } from '@/types/order';
 
 // 注文履歴一覧ページ
 export default function OrdersPage() {
@@ -29,7 +29,6 @@ export default function OrdersPage() {
         setLoading(false); // 読み込み終了
       }
     };
-
     // 注文履歴データを取得
     getOrders();
   }, []);
@@ -63,6 +62,61 @@ export default function OrdersPage() {
   // テーブルの共通スタイル
   const tableStyle = 'px-3 py-2 border-b';
 
+  // ステータス選択オプションの生成
+  const orderStatusOptions = orderStatus.map((status, index) => (
+    <option key={index} value={status} >
+      {status}
+    </option>
+  ));
+  const onUpdateOrderStatus = async (orderId:number, newStatus:string ) => {
+    try {  
+      const checkoutRes = await fetch('/api/orders/checkout', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, newStatus}),
+      });
+      if (!checkoutRes.ok) {
+          throw new Error('ステータスの更新に失敗しました');
+      }
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === orderId ? { ...order, status: newStatus as OrderStatus } : order
+        )
+      );
+      alert('ステータスを更新しました');
+    } catch (error) {
+      console.error(error);
+      alert('エラーが発生しました。もう一度お試しください。');
+    }
+  };
+  // 決済ステータス選択オプションの生成
+  const paymentStatusOptions = paymentStatus.map((status, index) => (
+    <option key={index} value={status} >
+      {status}
+    </option>
+  ));
+  const onUpdatePaymentStatus = async(orderId:number, newPaymentStatus: string) => {
+    try {  
+      const checkoutRes = await fetch('/api/orders/checkout', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId, newPaymentStatus}),
+      });
+        if (!checkoutRes.ok) {
+            throw new Error('ステータスの更新に失敗しました');
+        }
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === orderId ? { ...order, paymentStatus: newPaymentStatus as PaymentStatus } : order
+        )
+      );
+      alert('ステータスを更新しました');
+    } catch (error) {
+      console.error(error);
+      alert('エラーが発生しました。もう一度お試しください。');
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="my-4">
@@ -77,12 +131,30 @@ export default function OrdersPage() {
             <div className="flex justify-between mb-4">
               <div>
                 <p className="text-lg font-semibold">注文ID：{order.id}</p>
-                <p>注文日：{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '-'}</p>
+                <p>注文日時：{order.createdAt ? new Date(order.createdAt).toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</p>
+             </div>
+              <div>
+                <p className="text-lg font-semibold min-h-[28px]">  </p>
+                <p>受取日時：{order.createdAt ? new Date(order.pickupAt).toLocaleString('ja-JP', { dateStyle: 'medium', timeStyle: 'short' }) : '-'}</p>       
               </div>
               <div className="text-right font-semibold">
-                <p className="text-blue-600 text-xl">合計金額：¥{order.totalPrice.toLocaleString()}（送料込み）</p>
-                <p className={getStatusStyle(order.status)}>注文状況：{order.status}</p>
-                <p className={getStatusStyle(order.paymentStatus)}>決済状況：{order.paymentStatus}</p>
+                <div>
+                  <p className="text-blue-600 text-xl">合計金額：¥{order.totalPrice.toLocaleString()}</p>
+                  <label htmlFor={`status-${order.id}`} className={getStatusStyle(order.status)}>
+                    注文状況：</label>
+                  <select id={`status-${order.id}`} value={order.status}
+                    onChange={(e) =>  onUpdateOrderStatus(order.id, String(e.target.value))}
+                    className="border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-indigo-500 mb-4 "
+                  >{orderStatusOptions}</select>
+                </div>
+                <div>
+                  <label htmlFor={`paymentStatus-${order.id}`} className={getStatusStyle(order.paymentStatus)}>
+                    決済状況：</label>
+                  <select id={`paymentStatus-${order.id}`} value={order.paymentStatus}
+                    onChange={(e) =>  onUpdatePaymentStatus(order.id, String(e.target.value))}
+                    className="border border-gray-300 rounded-md px-3 py-1 focus:ring-2 focus:ring-indigo-500 mb-4 "
+                  >{paymentStatusOptions}</select>
+                </div>
               </div>
             </div>
 

@@ -56,10 +56,10 @@ export default async function ProductDetailPage(props: ProductDetailPageProps) {
   let stockText = '売り切れ';
   let stockStyle = 'text-red-600';
   if (stock > 10) {
-    stockText = '在庫あり';
+    stockText = '注文可';
     stockStyle = 'text-green-600';
   } else if (stock > 0) {
-    stockText = '在庫わずか';
+    stockText = 'もうすぐ売り切れ';
     stockStyle = 'text-orange-500';
   }
   // 画像の指定がなければダミー画像を表示
@@ -82,7 +82,7 @@ export default async function ProductDetailPage(props: ProductDetailPageProps) {
           <h1>{product.name}</h1>
           <p className="text-gray-700 whitespace-pre-line">{product.description}</p>
           <p className="text-3xl font-bold text-indigo-600">¥{product.price.toLocaleString()}<span className="text-base font-normal text-gray-500">（税込）</span></p>
-          <p className={`text-base font-medium ${stockStyle}`}>在庫状況：{stockText}</p>
+          <p className={`text-base font-medium ${stockStyle}`}>提供可否：{stockText}</p>
 
           {/* 一般ユーザー向け項目 */}
           <div className="space-y-6 mt-8">
@@ -97,9 +97,6 @@ export default async function ProductDetailPage(props: ProductDetailPageProps) {
                 stock={stock}
                 loggedIn={loggedIn}
               />
-            )}
-            {loggedIn && (
-              <button className="text-teal-800 hover:underline">&#9825; お気に入り追加</button>
             )}
           </div>
 

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import ProductCard from '@/components/ProductCard';
 import { type ProductData } from '@/types/product';
+import { useCart } from '@/hooks/useCart';
 // 商品データの型定義
 type Product = Pick<ProductData, 'id' | 'name' | 'price' | 'image_url' | 'review_avg' | 'review_count'>;
 
@@ -34,9 +35,23 @@ export default function Home() {
     searchParams.get('logged-in') ? 'ログインしました。' :
     searchParams.get('logged-out') ? 'ログアウトしました。' :
     null;
+  const sessionId = searchParams.get('session_id');
+    const { clearCart } = useCart(); // カートクリア関数
 
+  // 決済成功時にカートを空にする
+  useEffect(() => {
+    if (sessionId) {
+      clearCart();
+    }
+  }, [sessionId, clearCart]);
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)]">
+      {sessionId && (
+        <div className="w-full bg-green-100 text-green-800 p-3 text-center shadow-md flex flex-col items-center justify-center mb-6 rounded-md">
+          <p className="text-xl font-bold mt-4">ご注文ありがとうございます！</p>
+          <p>ご来店をお待ちしております。</p>
+        </div>
+      )}
       {message && (
         <div className="bg-green-100 text-green-800 p-3 text-center shadow-md">
           {message}

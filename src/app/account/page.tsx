@@ -26,12 +26,7 @@ export default function AccountPage() {
     null;
   return (
     <>
-      {sessionId && (
-        <div className="w-full bg-green-100 text-green-800 p-3 text-center shadow-md flex flex-col items-center justify-center mb-6 rounded-md">
-          <p className="text-xl font-bold mt-4">ご注文ありがとうございます！</p>
-          <p>商品が到着するまでしばらくお待ち下さい。</p>
-        </div>
-      )}
+
       {message && (
         <div className="w-full bg-green-100 text-green-800 p-3 text-center shadow-md flex items-center justify-center">
           {message}
@@ -50,8 +45,8 @@ export default function AccountPage() {
 
           <Link href="/account/orders" className={menuItemStyle}>
             <div className="flex flex-col text-left">
-              <h2 className="mt-0 font-medium">注文履歴</h2>
-              <p className="text-gray-600">注文履歴を確認できます</p>
+              <h2 className="mt-0 font-medium">注文管理</h2>
+              <p className="text-gray-600">注文一覧を確認できます</p>
             </div>
           </Link>
 

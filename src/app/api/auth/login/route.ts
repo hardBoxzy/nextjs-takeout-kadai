@@ -11,18 +11,15 @@ export async function POST(request: NextRequest) {
   try {
     // リクエストボディからメールアドレスとパスワードを取得
     const { email, password } = await request.json();
-
     // 未入力チェック
     if (!email?.trim() || !password?.trim()) {
       return NextResponse.json({ message: 'メールアドレスとパスワードを入力してください。' }, { status: 400 });
     }
-
     // 入力されたメールアドレスに一致するユーザーを検索
     const users = await executeQuery<{ id: number; name: string; email: string; password: string; is_admin: boolean }>(
       'SELECT * FROM users WHERE email = ? AND enabled = TRUE',
       [email]
     );
-
     const user = users[0];
     if (!user) { // 該当ユーザーが存在しない
       return NextResponse.json({ message: 'メールアドレスまたはパスワードが違います。' }, { status: 401 });

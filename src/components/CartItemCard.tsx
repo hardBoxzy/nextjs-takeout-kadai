@@ -13,6 +13,8 @@ interface CartItemCardProps {
 }
 
 // カート商品カードコンポーネント
+
+
 export default function CartItemCard({
   item,
   isEditable,

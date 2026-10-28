@@ -3,34 +3,7 @@ import { executeQuery } from '@/lib/db';
 import { getAuthUser, type AuthUser } from '@/lib/auth';
 // 💡 unstable_connection を next/server からインポート
 import {  connection } from 'next/server'; 
-// 最終的なレスポンス（商品明細を配列化した注文データ）の型定義
-export interface OrderData {
-  id: number;
-  totalPrice: number;
-  status: '未処理' | '処理中' | '出荷済み' | '完了' | 'キャンセル' | '返金済み';
-  paymentStatus: '未決済' | '決済処理中' | '決済成功' | '決済失敗' | '返金処理中' | '返金済み';
-  createdAt: string;
-  items: OrderItem[]; // 商品明細の配列
-}
-
-// 注文ごとの商品データの型定義
-interface OrderItem {
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-// ordersとorder_itemsをテーブル結合した結果レコードの型定義
-interface OrderJoinRecord {
-  id: number;
-  totalPrice: number;
-  status: '未処理' | '処理中' | '出荷済み' | '完了' | 'キャンセル' | '返金済み';
-  paymentStatus: '未決済' | '決済処理中' | '決済成功' | '決済失敗' | '返金処理中' | '返金済み';
-  createdAt: string;
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-}
+import {  OrderData, OrderJoinRecord} from '@/types/order';
 
 // 注文データを取得
 export async function GET() {
@@ -51,14 +24,14 @@ export async function GET() {
         o.status AS status,
         o.payment_status AS paymentStatus,
         o.created_at AS createdAt,
+        o.pickup_at AS pickupAt,
         oi.product_name AS productName,
         oi.quantity AS quantity,
         oi.unit_price AS unitPrice
       FROM orders AS o
       JOIN order_items AS oi ON o.id = oi.order_id
-      WHERE o.user_id = ?
       ORDER BY o.created_at DESC, oi.id ASC;`,
-      [user.userId]
+      []
     );
 
     // Mapオブジェクト（キー＆値のペア）を使い、注文ごとに商品データをまとめる
@@ -72,6 +45,7 @@ export async function GET() {
           status: row.status,
           paymentStatus: row.paymentStatus,
           createdAt: row.createdAt,
+          pickupAt: row.pickupAt,
           items: [] // items配列を空で初期化
         });
       }
