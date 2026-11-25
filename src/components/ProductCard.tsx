@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useCart } from '@/hooks/useCart';
+import { getImageUrl } from '@/lib/imageUrl';
 // 商品カードコンポーネントに渡すデータ（props）の型定義
 export interface ProductCardProps {
   id: string; // 商品ID
@@ -48,9 +49,7 @@ export default function ProductCard({
   };
 
   // 画像の指定がなければダミー画像を表示
-  const finalImageUrl = imageUrl
-    ? `/uploads/${imageUrl}`
-    : '/images/no-image.jpg';
+  const finalImageUrl = getImageUrl(imageUrl);
 
   return (
     <div className={`

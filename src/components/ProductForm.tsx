@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getImageUrl } from '@/lib/imageUrl';
 
 // 商品フォームコンポーネントに渡すデータ（props）の型定義
 interface ProductFormProps {
@@ -38,7 +39,7 @@ export default function ProductForm({
   // 登録済みの画像があれば初期表示
   useEffect(() => {
     if (initialValues.image_url) {
-      setPreviewUrl(`/uploads/${initialValues.image_url}`);
+      setPreviewUrl(getImageUrl(initialValues.image_url));
     }
   }, [initialValues.image_url]);
   // URL.createObjectURL()で生成された一時URLを解放する

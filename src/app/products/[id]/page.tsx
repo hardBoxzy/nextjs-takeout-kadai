@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { type ProductData } from '@/types/product';
 import { isLoggedIn } from '@/lib/auth';
+import { getImageUrl } from '@/lib/imageUrl';
 import CartControls from '@/app/products/[id]/CartControls';
 // 商品データの型定義
 type Product = ProductData; // 基本型から変更なし
@@ -63,9 +64,7 @@ export default async function ProductDetailPage(props: ProductDetailPageProps) {
     stockStyle = 'text-orange-500';
   }
   // 画像の指定がなければダミー画像を表示
-  const finalImageUrl = product.image_url
-    ? `/uploads/${product.image_url}`
-    : '/images/no-image.jpg';
+  const finalImageUrl = getImageUrl(product.image_url);
   // ログイン状態を取得
   const loggedIn = await isLoggedIn();
   return (

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import { writeFile, rm } from 'fs/promises';
 import { executeQuery } from '@/lib/db'; // DB共通モジュール
+import { getValidExtension, saveImage, deleteImage } from '@/lib/storage'; // 画像保存モジュール
 import { type ProductData } from '@/types/product';
 
 // 商品データの型定義
@@ -82,47 +81,39 @@ export async function PUT(
       return NextResponse.json({ message: '必須項目が不足しています。' }, { status: 400 });
     }
 
-    // 新旧の画像ファイル名
-    const oldFileName = currentProduct.image_url;
-    let newFileName = oldFileName; // 暫定的に既存ファイル名
+    // 新旧の画像URL
+    const oldImageUrl = currentProduct.image_url;
+    let newImageUrl = oldImageUrl; // 暫定的に既存の画像
 
     // 新しい画像ファイルがアップロードされた場合
-    if (file && file.size > 0) {
+    const hasNewImage = Boolean(file && file.size > 0);
+    if (file && hasNewImage) {
       // 拡張子を安全に取得
-      const ext = file.name.split('.').pop();
-      if (!ext || !['jpg', 'jpeg', 'png'].includes(ext.toLowerCase())) {
+      const ext = getValidExtension(file);
+      if (!ext) {
         return NextResponse.json({ message: '対応していないファイル形式です。' }, { status: 400 });
       }
 
-      // 重複しないファイル名を生成
-      const timestamp = Date.now(); // 現在の日付
-      const random = Math.floor(Math.random() * 10000); // 0～9999の乱数
-      newFileName = `${timestamp}_${random}.${ext}`;
-
-      // 保存先のファイルパスを構築
-      const newFilePath = path.join(process.cwd(), 'public/uploads', newFileName);
-
-      // 新しいファイルを保存
-      const buffer = Buffer.from(await file.arrayBuffer());
-      await writeFile(newFilePath, buffer);
-
-      // 既存の画像ファイルがあれば削除
-      if (oldFileName) {
-        const oldFilePath = path.join(process.cwd(), 'public/uploads', oldFileName);
-        try { // ファイルを削除
-          await rm(oldFilePath);
-        } catch (err) {
-          console.error('画像ファイル削除エラー：', err);
-        }
-      }
+      // 新しい画像を保存（本番はS3、開発はpublic/uploads）
+      newImageUrl = await saveImage(file, ext);
     }
 
     // 商品情報をproductsテーブルで更新
-    await executeQuery(`
-      UPDATE products
-      SET name = ?, image_url = ?, description = ?, price = ?, stock = ?, is_featured = ?
-      WHERE id = ?;
-    `, [name, newFileName ?? null, description, price, stock, isFeatured ? 1 : 0, productId]);
+    try {
+      await executeQuery(`
+        UPDATE products
+        SET name = ?, image_url = ?, description = ?, price = ?, stock = ?, is_featured = ?
+        WHERE id = ?;
+      `, [name, newImageUrl ?? null, description, price, stock, isFeatured ? 1 : 0, productId]);
+    } catch (err) {
+      if (hasNewImage) await deleteImage(newImageUrl); // 更新失敗時は新しい画像を削除
+      throw err;
+    }
+
+    // DB更新に成功したら古い画像を削除
+    if (hasNewImage) {
+      await deleteImage(oldImageUrl);
+    }
 
     return NextResponse.json({ message: '商品を編集しました。' }, { status: 200 });
   } catch (err) {
@@ -156,21 +147,14 @@ export async function DELETE(
     }
     const currentProduct = existing[0]; // 現状の商品データを取得
 
-    // 画像ファイルがあれば削除
-    if (currentProduct.image_url) {
-      const filePath = path.join(process.cwd(), 'public/uploads', currentProduct.image_url);
-      try { // ファイルを削除
-        await rm(filePath);
-      } catch (err) {
-        console.error('画像ファイル削除エラー：', err);
-      }
-    }
-
     // DBから商品を削除
     await executeQuery(
       'DELETE FROM products WHERE id = ?;',
       [productId]
     );
+
+    // 画像ファイルがあれば削除（S3またはローカル）
+    await deleteImage(currentProduct.image_url);
 
     return NextResponse.json({ message: '商品を削除しました。' }, { status: 200 });
   } catch (err) {

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import path from 'path';
-import { writeFile } from 'fs/promises';
 import { executeQuery } from '@/lib/db'; // DB共通モジュール
+import { getValidExtension, saveImage, deleteImage } from '@/lib/storage'; // 画像保存モジュール
 import { type ProductData } from '@/types/product';
 // 商品データの型定義
 type Product = Omit<ProductData, 'description'>;
@@ -97,28 +96,24 @@ export async function POST(request: NextRequest) {
     }
 
     // 拡張子を安全に取得
-    const ext = file.name.split('.').pop();
-    if (!ext || !['jpg', 'jpeg', 'png'].includes(ext.toLowerCase())) {
+    const ext = getValidExtension(file);
+    if (!ext) {
       return NextResponse.json({ message: '対応していないファイル形式です。' }, { status: 400 });
     }
 
-    // 重複しないファイル名を生成
-    const timestamp = Date.now(); // 現在の日付
-    const random = Math.floor(Math.random() * 10000); // 0～9999の乱数
-    const fileName = `${timestamp}_${random}.${ext}`; // ファイル名を構築
-
-    // 保存先のファイルパスを構築
-    const filePath = path.join(process.cwd(), 'public/uploads', fileName);
-
-    // ファイルを保存
-    const buffer = Buffer.from(await file.arrayBuffer());
-    await writeFile(filePath, buffer);
+    // 画像を保存（本番はS3、開発はpublic/uploads）
+    const imageUrl = await saveImage(file, ext);
 
     // 商品情報をproductsテーブルに追加
-    await executeQuery(`
-      INSERT INTO products (name, image_url, description, price, stock, is_featured)
-      VALUES (?, ?, ?, ?, ?, ?);
-    `, [name, fileName, description, price, stock, isFeatured ? 1 : 0]);
+    try {
+      await executeQuery(`
+        INSERT INTO products (name, image_url, description, price, stock, is_featured)
+        VALUES (?, ?, ?, ?, ?, ?);
+      `, [name, imageUrl, description, price, stock, isFeatured ? 1 : 0]);
+    } catch (err) {
+      await deleteImage(imageUrl); // DB登録に失敗したら画像も削除
+      throw err;
+    }
 
     return NextResponse.json({ message: '商品を登録しました。' }, { status: 201 });
   } catch (err) {
